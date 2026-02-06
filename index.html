@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en" class="h-full">
 <head>
@@ -11,7 +12,7 @@
             if (loader) {
                 loader.innerHTML = `
                     <div style="color:red; padding:20px; text-align:center; font-family:sans-serif;">
-                        <h3 style="margin-bottom:10px">⚠️ Startup Error</h3>
+                        <h3 style="margin-bottom:10px">⚠️ Application Error</h3>
                         <p style="font-size:12px">${msg}</p>
                         <button onclick="localStorage.clear(); window.location.reload()" style="margin-top:20px; padding:10px 20px; background:#333; color:white; border:none; border-radius:5px;">
                             Reset App Data
@@ -135,18 +136,12 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Model Selection</label>
                     <select id="setting-model" class="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
                         <option value="openrouter/free">openrouter/free</option>
-                        <option value="meta-llama/Llama-2-7b-chat-hf">meta-llama/Llama-2-7b-chat-hf</option>
-                        <option value="mistralai/Mistral-7B-Instruct-v0.2">mistralai/Mistral-7B-Instruct-v0.2</option>
+                        <option value="meta-llama/llama-3-8b-instruct">meta-llama/Llama-3-8b-instruct</option>
+                        <option value="mistralai/mistral-7b-instruct-v0.2">mistralai/Mistral-7B-Instruct-v0.2</option>
                         <option value="google/gemma-7b-it">google/gemma-7b-it</option>
-                        <option value="nousresearch/nous-hermes-2-mistral-7b">nousresearch/nous-hermes-2-mistral-7b</option>
                         <option value="tiiuae/falcon-7b-instruct">tiiuae/falcon-7b-instruct</option>
-                        <option value="huggingfaceh4/starchat-beta">huggingfaceh4/starchat-beta</option>
-                        <option value="openchat/openchat-3.5-0106">openchat/openchat-3.5-0106</option>
-                        <option value="gryphe/mythomax-l2-13b">gryphe/mythomax-l2-13b</option>
-                        <option value="teknium/openhermes-2.5-mistral-7b">teknium/openhermes-2.5-mistral-7b</option>
-                        <option value="cognitivecomputations/dolphin-2.6-mistral-7b">cognitivecomputations/dolphin-2.6-mistral-7b</option>
                         <option value="allenai/olmo-7b-instruct">allenai/olmo-7b-instruct</option>
-                        <option value="upstage/solar-0-70b-instruct-v1">upstage/solar-0-70b-instruct-v1</option>
+                        <option value="upstage/solar-10.7b-instruct-v1">upstage/solar-10.7b-instruct-v1</option>
                     </select>
                 </div>
                 <div>
@@ -238,7 +233,7 @@
                 }
                 
                 if (this.els.settingKey) this.els.settingKey.value = this.state.apiKey || '';
-                // Dropdown value setting
+                
                 if (this.els.settingModel) {
                      this.els.settingModel.value = this.state.model;
                      // If saved model isn't in new list, reset to default
@@ -247,6 +242,7 @@
                          this.state.model = DEFAULT_MODEL;
                      }
                 }
+                
                 if (this.els.settingSystem) this.els.settingSystem.value = this.state.systemPrompt || DEFAULT_SYSTEM;
                 if (this.els.headerModel) this.els.headerModel.innerText = this.state.model || DEFAULT_MODEL;
             }
@@ -420,14 +416,17 @@
                 this.appendMessageToDOM('assistant', '<span class="animate-pulse">...</span>');
 
                 try {
+                    // Strict Header Requirements for OpenRouter
+                    const headers = {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${this.state.apiKey}`,
+                        'HTTP-Referer': 'https://github.com/universal-ai-chat', 
+                        'X-Title': 'Universal AI Chat'
+                    };
+
                     const response = await fetch(API_URL, {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${this.state.apiKey}`,
-                            'HTTP-Referer': window.location.href,
-                            'X-Title': 'Universal AI Chat'
-                        },
+                        headers: headers,
                         body: JSON.stringify({
                             model: this.state.model,
                             messages: messages,
@@ -435,7 +434,11 @@
                         })
                     });
 
-                    if (!response.ok) throw new Error(`API Error: ${response.status}`);
+                    if (!response.ok) {
+                        const errText = await response.text();
+                        // Handle 404/400 explicitly
+                        throw new Error(`API Error ${response.status}: ${errText || 'Invalid Request'}`);
+                    }
 
                     const reader = response.body.getReader();
                     const decoder = new TextDecoder();
@@ -462,8 +465,10 @@
                     this.saveState();
 
                 } catch (error) {
-                    this.appendMessageToDOM('assistant', `**Error:** ${error.message}`);
-                    currentChat.messages.push({ role: 'assistant', content: `Error: ${error.message}` });
+                    // Cleaner error display
+                    const cleanMsg = error.message.replace(/"/g, '');
+                    this.appendMessageToDOM('assistant', `**Connection Error:** \n${cleanMsg}\n\n*Tip: Try selecting a different model in Settings.*`);
+                    currentChat.messages.push({ role: 'assistant', content: `Error: ${cleanMsg}` });
                 } finally {
                     this.isGenerating = false;
                     this.els.sendBtn.disabled = false;
