@@ -25,44 +25,35 @@ Loading App...
 <div id="overlay" class="fixed inset-0 bg-black/40 hidden z-30"></div>
 
 <!-- Sidebar -->
-<aside id="sidebar"
-class="fixed md:static inset-y-0 left-0 w-72 bg-white dark:bg-gray-800 border-r
-border-gray-200 dark:border-gray-700 flex flex-col transform -translate-x-full
-md:translate-x-0 transition-transform z-40">
-
-<div class="p-4 flex justify-between border-b dark:border-gray-700">
-<span class="font-semibold">Chats</span>
-<button id="newChatBtn" class="text-sm px-2 py-1 bg-blue-600 text-white rounded">New</button>
-</div>
-
-<div id="chatList" class="flex-1 overflow-y-auto"></div>
+<aside id="sidebar" class="fixed md:static inset-y-0 left-0 w-72 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col transform -translate-x-full md:translate-x-0 transition-transform z-40">
+  <div class="p-4 flex justify-between border-b dark:border-gray-700">
+    <span class="font-semibold">Chats</span>
+    <button id="newChatBtn" class="text-sm px-2 py-1 bg-blue-600 text-white rounded">New</button>
+  </div>
+  <div id="chatList" class="flex-1 overflow-y-auto"></div>
 </aside>
 
 <!-- Main -->
 <main class="flex-1 flex flex-col min-h-screen md:ml-72">
 
-<header class="sticky top-0 z-30 h-14 flex items-center justify-between px-4
-border-b dark:border-gray-700 bg-white dark:bg-gray-800">
-<div class="flex items-center gap-2">
-<button id="menuBtn" class="md:hidden text-xl">☰</button>
-<span id="chatTitle" class="font-medium truncate">New Chat</span>
-</div>
-<div class="flex gap-3">
-<button id="darkToggle">🌙</button>
-<button id="settingsBtn">⚙️</button>
-</div>
+<header class="sticky top-0 z-30 h-14 flex items-center justify-between px-4 border-b dark:border-gray-700 bg-white dark:bg-gray-800">
+  <div class="flex items-center gap-2">
+    <button id="menuBtn" class="md:hidden text-xl">☰</button>
+    <span id="chatTitle" class="font-medium truncate">New Chat</span>
+  </div>
+  <div class="flex gap-3">
+    <button id="darkToggle">🌙</button>
+    <button id="settingsBtn">⚙️</button>
+  </div>
 </header>
 
 <div id="messages" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
 
 <div class="sticky bottom-0 bg-white dark:bg-gray-800 border-t dark:border-gray-700 p-3">
-<form id="chatForm" class="flex gap-2">
-<textarea id="userInput" rows="1"
-class="flex-1 resize-none rounded border dark:border-gray-600 p-2
-bg-white dark:bg-gray-700"
-placeholder="Message..."></textarea>
-<button class="px-4 bg-blue-600 text-white rounded">Send</button>
-</form>
+  <form id="chatForm" class="flex gap-2">
+    <textarea id="userInput" rows="1" class="flex-1 resize-none rounded border dark:border-gray-600 p-2 bg-white dark:bg-gray-700" placeholder="Message..."></textarea>
+    <button class="px-4 bg-blue-600 text-white rounded">Send</button>
+  </form>
 </div>
 </main>
 
@@ -73,20 +64,17 @@ placeholder="Message..."></textarea>
 <h2 class="font-semibold text-lg">Settings</h2>
 
 <label class="text-sm">OpenRouter API Key</label>
-<input id="apiKeyInput" type="password"
-class="w-full p-2 rounded border dark:border-gray-600 bg-white dark:bg-gray-700">
+<input id="apiKeyInput" type="password" class="w-full p-2 rounded border dark:border-gray-600 bg-white dark:bg-gray-700">
 
 <label class="text-sm">Model</label>
-<select id="modelSelect"
-class="w-full p-2 rounded border dark:border-gray-600 bg-white dark:bg-gray-700"></select>
+<select id="modelSelect" class="w-full p-2 rounded border dark:border-gray-600 bg-white dark:bg-gray-700"></select>
 
 <label class="text-sm">System Prompt</label>
-<textarea id="systemPromptInput" rows="3"
-class="w-full p-2 rounded border dark:border-gray-600 bg-white dark:bg-gray-700"></textarea>
+<textarea id="systemPromptInput" rows="3" class="w-full p-2 rounded border dark:border-gray-600 bg-white dark:bg-gray-700"></textarea>
 
 <div class="flex justify-end gap-2">
-<button id="closeSettings" class="px-3 py-1 border rounded">Close</button>
-<button id="saveSettings" class="px-3 py-1 bg-blue-600 text-white rounded">Save</button>
+  <button id="closeSettings" class="px-3 py-1 border rounded">Close</button>
+  <button id="saveSettings" class="px-3 py-1 bg-blue-600 text-white rounded">Save</button>
 </div>
 </div>
 </div>
@@ -129,197 +117,200 @@ const MODELS=[
 let chats=JSON.parse(localStorage.getItem("chats")||"[]");
 let activeChatId=localStorage.getItem("activeChatId");
 let settings={
-  model: localStorage.getItem("model") || MODELS[0],
-  apiKey: localStorage.getItem("apiKey") || ""
+  apiKey: localStorage.getItem("apiKey") || "",
+  model: localStorage.getItem("model") || MODELS[0]
 };
 
 /* ---------------- INIT ---------------- */
 document.addEventListener("DOMContentLoaded",()=>{
-initModels();
-loadTheme();
-apiKeyInput.value=settings.apiKey;
-if(!chats.length)createChat();
-renderChats();
-openChat(activeChatId||chats[0].id);
-loading.style.display="none";
+  initModels();
+  apiKeyInput.value=settings.apiKey;
+  loadTheme();
+  if(!chats.length)createChat();
+  renderChats();
+  openChat(activeChatId||chats[0].id);
+  loading.style.display="none";
 });
 
-/* ---------------- HELPERS ---------------- */
+/* ---------------- UTILS ---------------- */
 function scrollBottom(){
-requestAnimationFrame(()=>{
-messages.scrollTop=messages.scrollHeight;
-});
+  requestAnimationFrame(()=>messages.scrollTop=messages.scrollHeight);
 }
 
 /* ---------------- MODELS ---------------- */
 function initModels(){
-modelSelect.innerHTML="";
-MODELS.forEach(m=>{
-const o=document.createElement("option");
-o.value=m;
-o.textContent=m;
-modelSelect.appendChild(o);
+  modelSelect.innerHTML="";
+  MODELS.forEach(m=>{
+    const o=document.createElement("option");
+    o.value=m;
+    o.textContent=m;
+    modelSelect.appendChild(o);
+  });
+  modelSelect.value=MODELS.includes(settings.model)?settings.model:MODELS[0];
+}
+
+modelSelect.addEventListener("change",()=>{
+  settings.model=modelSelect.value;
 });
-if(MODELS.includes(settings.model)){
-modelSelect.value=settings.model;
-}
-}
 
 /* ---------------- CHAT ---------------- */
 function createChat(){
-const id=Date.now().toString();
-chats.push({id,title:"New Chat",messages:[],system:""});
-activeChatId=id;
-saveChats();
+  const id=Date.now().toString();
+  chats.push({id,title:"New Chat",messages:[],system:""});
+  activeChatId=id;
+  saveChats();
 }
 
 function openChat(id){
-activeChatId=id;
-localStorage.setItem("activeChatId",id);
-const c=chats.find(x=>x.id===id);
-chatTitle.textContent=c.title;
-systemPromptInput.value=c.system||"";
-renderMessages(c.messages);
-sidebar.classList.add("-translate-x-full");
-overlay.classList.add("hidden");
+  activeChatId=id;
+  localStorage.setItem("activeChatId",id);
+  const c=chats.find(x=>x.id===id);
+  chatTitle.textContent=c.title;
+  systemPromptInput.value=c.system||"";
+  renderMessages(c.messages);
+  sidebar.classList.add("-translate-x-full");
+  overlay.classList.add("hidden");
 }
 
 function renderChats(){
-chatList.innerHTML="";
-chats.forEach(c=>{
-const d=document.createElement("div");
-d.className="px-4 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700";
-d.textContent=c.title;
-d.onclick=()=>openChat(c.id);
-chatList.appendChild(d);
-});
+  chatList.innerHTML="";
+  chats.forEach(c=>{
+    const d=document.createElement("div");
+    d.className="px-4 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700";
+    d.textContent=c.title;
+    d.onclick=()=>openChat(c.id);
+    chatList.appendChild(d);
+  });
 }
 
 function renderMessages(msgs){
-messages.innerHTML="";
-msgs.forEach(m=>addMessage(m.role,m.content));
-scrollBottom();
+  messages.innerHTML="";
+  msgs.forEach(m=>addMessage(m.role,m.content));
+  scrollBottom();
 }
 
 function addMessage(role,content,stream=false){
-const w=document.createElement("div");
-w.className=`flex ${role==="user"?"justify-end":"justify-start"}`;
-const b=document.createElement("div");
-b.className=`max-w-[80%] p-3 rounded ${
-role==="user"?"bg-blue-600 text-white":"bg-gray-200 dark:bg-gray-700"}`;
-b.innerHTML=stream?content:marked.parse(content);
-w.appendChild(b);
-messages.appendChild(w);
-scrollBottom();
-return b;
+  const w=document.createElement("div");
+  w.className=`flex ${role==="user"?"justify-end":"justify-start"}`;
+  const b=document.createElement("div");
+  b.className=`max-w-[80%] p-3 rounded ${role==="user"?"bg-blue-600 text-white":"bg-gray-200 dark:bg-gray-700"}`;
+  b.innerHTML=stream?content:marked.parse(content);
+  w.appendChild(b);
+  messages.appendChild(w);
+  scrollBottom();
+  return b;
 }
 
 /* ---------------- SEND ---------------- */
 chatForm.onsubmit=async e=>{
-e.preventDefault();
-const text=userInput.value.trim();
-if(!text)return;
-userInput.value="";
+  e.preventDefault();
+  const text=userInput.value.trim();
+  if(!text)return;
+  userInput.value="";
 
-const chat=chats.find(c=>c.id===activeChatId);
-chat.messages.push({role:"user",content:text});
-addMessage("user",text);
+  const chat=chats.find(c=>c.id===activeChatId);
+  chat.messages.push({role:"user",content:text});
+  addMessage("user",text);
 
-const aiBubble=addMessage("assistant","",true);
-let full="";
+  const aiBubble=addMessage("assistant","",true);
+  let full="";
 
-if(!settings.apiKey){
-aiBubble.textContent="API key missing.";
-return;
-}
+  if(!settings.apiKey){
+    aiBubble.textContent="API key missing.";
+    return;
+  }
 
-const res=await fetch("https://openrouter.ai/api/v1/chat/completions",{
-method:"POST",
-headers:{
-"Content-Type":"application/json",
-"Authorization":"Bearer "+settings.apiKey
-},
-body:JSON.stringify({
-model:settings.model,
-stream:true,
-messages:[
-...(chat.system?[{role:"system",content:chat.system}]:[]),
-...chat.messages
-]
-})
-});
+  const res=await fetch("https://openrouter.ai/api/v1/chat/completions",{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "Authorization":"Bearer "+settings.apiKey
+    },
+    body:JSON.stringify({
+      model:settings.model,
+      stream:true,
+      messages:[
+        ...(chat.system?[{role:"system",content:chat.system}]:[]),
+        ...chat.messages
+      ]
+    })
+  });
 
-const reader=res.body.getReader();
-const decoder=new TextDecoder();
+  const reader=res.body.getReader();
+  const decoder=new TextDecoder();
 
-while(true){
-const {value,done}=await reader.read();
-if(done)break;
-decoder.decode(value).split("\n").forEach(line=>{
-if(line.startsWith("data: ")){
-const d=line.slice(6);
-if(d==="[DONE]")return;
-try{
-const j=JSON.parse(d);
-const t=j.choices?.[0]?.delta?.content;
-if(t){
-full+=t;
-aiBubble.innerHTML=marked.parse(full)+'<span class="typing-caret"></span>';
-scrollBottom();
-}
-}catch{}
-}
-});
-}
+  while(true){
+    const {value,done}=await reader.read();
+    if(done)break;
+    decoder.decode(value).split("\n").forEach(line=>{
+      if(line.startsWith("data: ")){
+        const d=line.slice(6);
+        if(d==="[DONE]")return;
+        try{
+          const j=JSON.parse(d);
+          const t=j.choices?.[0]?.delta?.content;
+          if(t){
+            full+=t;
+            aiBubble.innerHTML=marked.parse(full)+'<span class="typing-caret"></span>';
+            scrollBottom();
+          }
+        }catch{}
+      }
+    });
+  }
 
-aiBubble.innerHTML=marked.parse(full);
-chat.messages.push({role:"assistant",content:full});
-saveChats();
+  aiBubble.innerHTML=marked.parse(full);
+  chat.messages.push({role:"assistant",content:full});
+  saveChats();
 };
 
 /* ---------------- SETTINGS ---------------- */
-settingsBtn.onclick=()=>settingsModal.classList.remove("hidden");
-closeSettings.onclick=()=>settingsModal.classList.add("hidden");
+settingsBtn.onclick=()=>{
+  modelSelect.value=settings.model;
+  apiKeyInput.value=settings.apiKey;
+  settingsModal.classList.remove("hidden");
+};
 
 saveSettings.onclick=()=>{
-settings.apiKey=apiKeyInput.value;
-settings.model=modelSelect.value;
-localStorage.setItem("apiKey",settings.apiKey);
-localStorage.setItem("model",settings.model);
-const chat=chats.find(c=>c.id===activeChatId);
-chat.system=systemPromptInput.value;
-saveChats();
-settingsModal.classList.add("hidden");
+  settings.apiKey=apiKeyInput.value.trim();
+  settings.model=modelSelect.value;
+  localStorage.setItem("apiKey",settings.apiKey);
+  localStorage.setItem("model",settings.model);
+  const chat=chats.find(c=>c.id===activeChatId);
+  chat.system=systemPromptInput.value;
+  saveChats();
+  settingsModal.classList.add("hidden");
+};
+
+closeSettings.onclick=()=>settingsModal.classList.add("hidden");
+
+/* ---------------- UI ---------------- */
+menuBtn.onclick=()=>{
+  sidebar.classList.remove("-translate-x-full");
+  overlay.classList.remove("hidden");
+};
+overlay.onclick=()=>{
+  sidebar.classList.add("-translate-x-full");
+  overlay.classList.add("hidden");
+};
+newChatBtn.onclick=()=>{
+  createChat();
+  renderChats();
+  openChat(activeChatId);
 };
 
 /* ---------------- THEME ---------------- */
 darkToggle.onclick=()=>{
-document.documentElement.classList.toggle("dark");
-localStorage.setItem("dark",document.documentElement.classList.contains("dark"));
+  document.documentElement.classList.toggle("dark");
+  localStorage.setItem("dark",document.documentElement.classList.contains("dark"));
 };
 function loadTheme(){
-if(localStorage.getItem("dark")==="true")
-document.documentElement.classList.add("dark");
+  if(localStorage.getItem("dark")==="true")
+    document.documentElement.classList.add("dark");
 }
 
-/* ---------------- SIDEBAR ---------------- */
-menuBtn.onclick=()=>{
-sidebar.classList.remove("-translate-x-full");
-overlay.classList.remove("hidden");
-};
-overlay.onclick=()=>{
-sidebar.classList.add("-translate-x-full");
-overlay.classList.add("hidden");
-};
-
-newChatBtn.onclick=()=>{
-createChat();
-renderChats();
-openChat(activeChatId);
-};
-
 function saveChats(){
-localStorage.setItem("chats",JSON.stringify(chats));
+  localStorage.setItem("chats",JSON.stringify(chats));
 }
 </script>
 </body>
