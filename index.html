@@ -6,10 +6,7 @@
 <title>Universal AI Chat</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
-<script>
-tailwind.config = { darkMode: 'class' }
-</script>
-
+<script>tailwind.config={darkMode:'class'}</script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
 <style>
@@ -25,7 +22,6 @@ html,body{height:100%}
 Loading App...
 </div>
 
-<!-- Overlay -->
 <div id="overlay" class="fixed inset-0 bg-black/40 hidden z-30"></div>
 
 <!-- Sidebar -->
@@ -45,25 +41,20 @@ md:translate-x-0 transition-transform z-40">
 <!-- Main -->
 <main class="flex-1 flex flex-col min-h-screen md:ml-72">
 
-<!-- Header -->
 <header class="sticky top-0 z-30 h-14 flex items-center justify-between px-4
 border-b dark:border-gray-700 bg-white dark:bg-gray-800">
-
 <div class="flex items-center gap-2">
 <button id="menuBtn" class="md:hidden text-xl">☰</button>
 <span id="chatTitle" class="font-medium truncate">New Chat</span>
 </div>
-
 <div class="flex gap-3">
 <button id="darkToggle">🌙</button>
 <button id="settingsBtn">⚙️</button>
 </div>
 </header>
 
-<!-- Messages -->
 <div id="messages" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
 
-<!-- Input -->
 <div class="sticky bottom-0 bg-white dark:bg-gray-800 border-t dark:border-gray-700 p-3">
 <form id="chatForm" class="flex gap-2">
 <textarea id="userInput" rows="1"
@@ -101,9 +92,40 @@ class="w-full p-2 rounded border dark:border-gray-600 bg-white dark:bg-gray-700"
 </div>
 
 <script>
-/* ---------------- STATE ---------------- */
-const MODELS=[/* same list omitted for brevity */"openrouter/free"];
+/* ---------------- MODELS ---------------- */
+const MODELS=[
+"arcee-ai/trinity-large-preview:free",
+"tngtech/deepseek-r1t2-chimera:free",
+"z-ai/glm-4.5-air:free",
+"stepfun/step-3.5-flash:free",
+"tngtech/deepseek-r1t-chimera:free",
+"nvidia/nemotron-3-nano-30b-a3b:free",
+"deepseek/deepseek-r1-0528:free",
+"tngtech/tng-r1t-chimera:free",
+"openai/gpt-oss-120b:free",
+"qwen/qwen3-coder:free",
+"upstage/solar-pro-3:free",
+"meta-llama/llama-3.3-70b-instruct:free",
+"arcee-ai/trinity-mini:free",
+"openai/gpt-oss-20b:free",
+"qwen/qwen3-next-80b-a3b-instruct:free",
+"nvidia/nemotron-nano-12b-v2-vl:free",
+"nvidia/nemotron-nano-9b-v2:free",
+"google/gemma-3-27b-it:free",
+"cognitivecomputations/dolphin-mistral-24b-venice-edition:free",
+"liquid/lfm-2.5-1.2b-instruct:free",
+"liquid/lfm-2.5-1.2b-thinking:free",
+"mistralai/mistral-small-3.1-24b-instruct:free",
+"nousresearch/hermes-3-llama-3.1-405b:free",
+"google/gemma-3n-e2b-it:free",
+"qwen/qwen3-4b:free",
+"google/gemma-3-12b-it:free",
+"meta-llama/llama-3.2-3b-instruct:free",
+"google/gemma-3n-e4b-it:free",
+"openrouter/free"
+];
 
+/* ---------------- STATE ---------------- */
 let chats=JSON.parse(localStorage.getItem("chats")||"[]");
 let activeChatId=localStorage.getItem("activeChatId");
 let settings={model:localStorage.getItem("model")||MODELS[0]};
@@ -115,34 +137,28 @@ loadTheme();
 if(!chats.length)createChat();
 renderChats();
 openChat(activeChatId||chats[0].id);
-document.getElementById("loading").style.display="none";
+loading.style.display="none";
 });
 
 /* ---------------- SIDEBAR ---------------- */
-const sidebar=document.getElementById("sidebar");
-const overlay=document.getElementById("overlay");
-
-function openSidebar(){
+menuBtn.onclick=()=>{
 sidebar.classList.remove("-translate-x-full");
 overlay.classList.remove("hidden");
-}
-function closeSidebar(){
+};
+overlay.onclick=()=>{
 sidebar.classList.add("-translate-x-full");
 overlay.classList.add("hidden");
-}
-
-menuBtn.onclick=openSidebar;
-overlay.onclick=closeSidebar;
+};
 
 /* ---------------- MODELS ---------------- */
 function initModels(){
-const sel=modelSelect;
+modelSelect.innerHTML="";
 MODELS.forEach(m=>{
 const o=document.createElement("option");
 o.value=o.textContent=m;
-sel.appendChild(o);
+modelSelect.appendChild(o);
 });
-sel.value=settings.model;
+modelSelect.value=settings.model;
 }
 
 /* ---------------- CHAT ---------------- */
@@ -156,11 +172,12 @@ saveChats();
 function openChat(id){
 activeChatId=id;
 localStorage.setItem("activeChatId",id);
-const chat=chats.find(c=>c.id===id);
-chatTitle.textContent=chat.title;
-systemPromptInput.value=chat.system||"";
-renderMessages(chat.messages);
-closeSidebar();
+const c=chats.find(x=>x.id===id);
+chatTitle.textContent=c.title;
+systemPromptInput.value=c.system||"";
+renderMessages(c.messages);
+sidebar.classList.add("-translate-x-full");
+overlay.classList.add("hidden");
 }
 
 function renderChats(){
@@ -177,7 +194,7 @@ chatList.appendChild(d);
 function renderMessages(msgs){
 messages.innerHTML="";
 msgs.forEach(m=>addMessage(m.role,m.content));
-messages.scrollTop=messages.scrollHeight;
+scrollBottom();
 }
 
 function addMessage(role,content,stream=false){
@@ -189,7 +206,12 @@ role==="user"?"bg-blue-600 text-white":"bg-gray-200 dark:bg-gray-700"}`;
 b.innerHTML=stream?content:marked.parse(content);
 w.appendChild(b);
 messages.appendChild(w);
+scrollBottom();
 return b;
+}
+
+function scrollBottom(){
+messages.scrollTop=messages.scrollHeight;
 }
 
 /* ---------------- SEND ---------------- */
@@ -241,6 +263,7 @@ const t=j.choices?.[0]?.delta?.content;
 if(t){
 full+=t;
 aiBubble.innerHTML=marked.parse(full)+'<span class="typing-caret"></span>';
+scrollBottom();
 }
 }catch{}
 }
@@ -271,18 +294,17 @@ darkToggle.onclick=()=>{
 document.documentElement.classList.toggle("dark");
 localStorage.setItem("dark",document.documentElement.classList.contains("dark"));
 };
-
 function loadTheme(){
 if(localStorage.getItem("dark")==="true")
 document.documentElement.classList.add("dark");
 }
 
+/* ---------------- MISC ---------------- */
 newChatBtn.onclick=()=>{
 createChat();
 renderChats();
 openChat(activeChatId);
 };
-
 function saveChats(){
 localStorage.setItem("chats",JSON.stringify(chats));
 }
