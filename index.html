@@ -72,7 +72,7 @@ placeholder="Message..."></textarea>
 
 <h2 class="font-semibold text-lg">Settings</h2>
 
-<label class="text-sm">OpenRouter API Key (session only)</label>
+<label class="text-sm">OpenRouter API Key</label>
 <input id="apiKeyInput" type="password"
 class="w-full p-2 rounded border dark:border-gray-600 bg-white dark:bg-gray-700">
 
@@ -128,37 +128,41 @@ const MODELS=[
 /* ---------------- STATE ---------------- */
 let chats=JSON.parse(localStorage.getItem("chats")||"[]");
 let activeChatId=localStorage.getItem("activeChatId");
-let settings={model:localStorage.getItem("model")||MODELS[0]};
+let settings={
+  model: localStorage.getItem("model") || MODELS[0],
+  apiKey: localStorage.getItem("apiKey") || ""
+};
 
 /* ---------------- INIT ---------------- */
 document.addEventListener("DOMContentLoaded",()=>{
 initModels();
 loadTheme();
+apiKeyInput.value=settings.apiKey;
 if(!chats.length)createChat();
 renderChats();
 openChat(activeChatId||chats[0].id);
 loading.style.display="none";
 });
 
-/* ---------------- SIDEBAR ---------------- */
-menuBtn.onclick=()=>{
-sidebar.classList.remove("-translate-x-full");
-overlay.classList.remove("hidden");
-};
-overlay.onclick=()=>{
-sidebar.classList.add("-translate-x-full");
-overlay.classList.add("hidden");
-};
+/* ---------------- HELPERS ---------------- */
+function scrollBottom(){
+requestAnimationFrame(()=>{
+messages.scrollTop=messages.scrollHeight;
+});
+}
 
 /* ---------------- MODELS ---------------- */
 function initModels(){
 modelSelect.innerHTML="";
 MODELS.forEach(m=>{
 const o=document.createElement("option");
-o.value=o.textContent=m;
+o.value=m;
+o.textContent=m;
 modelSelect.appendChild(o);
 });
+if(MODELS.includes(settings.model)){
 modelSelect.value=settings.model;
+}
 }
 
 /* ---------------- CHAT ---------------- */
@@ -210,10 +214,6 @@ scrollBottom();
 return b;
 }
 
-function scrollBottom(){
-messages.scrollTop=messages.scrollHeight;
-}
-
 /* ---------------- SEND ---------------- */
 chatForm.onsubmit=async e=>{
 e.preventDefault();
@@ -228,14 +228,16 @@ addMessage("user",text);
 const aiBubble=addMessage("assistant","",true);
 let full="";
 
-const apiKey=sessionStorage.getItem("apiKey");
-if(!apiKey){aiBubble.textContent="API key missing.";return;}
+if(!settings.apiKey){
+aiBubble.textContent="API key missing.";
+return;
+}
 
 const res=await fetch("https://openrouter.ai/api/v1/chat/completions",{
 method:"POST",
 headers:{
 "Content-Type":"application/json",
-"Authorization":"Bearer "+apiKey
+"Authorization":"Bearer "+settings.apiKey
 },
 body:JSON.stringify({
 model:settings.model,
@@ -280,8 +282,9 @@ settingsBtn.onclick=()=>settingsModal.classList.remove("hidden");
 closeSettings.onclick=()=>settingsModal.classList.add("hidden");
 
 saveSettings.onclick=()=>{
-sessionStorage.setItem("apiKey",apiKeyInput.value);
+settings.apiKey=apiKeyInput.value;
 settings.model=modelSelect.value;
+localStorage.setItem("apiKey",settings.apiKey);
 localStorage.setItem("model",settings.model);
 const chat=chats.find(c=>c.id===activeChatId);
 chat.system=systemPromptInput.value;
@@ -299,12 +302,22 @@ if(localStorage.getItem("dark")==="true")
 document.documentElement.classList.add("dark");
 }
 
-/* ---------------- MISC ---------------- */
+/* ---------------- SIDEBAR ---------------- */
+menuBtn.onclick=()=>{
+sidebar.classList.remove("-translate-x-full");
+overlay.classList.remove("hidden");
+};
+overlay.onclick=()=>{
+sidebar.classList.add("-translate-x-full");
+overlay.classList.add("hidden");
+};
+
 newChatBtn.onclick=()=>{
 createChat();
 renderChats();
 openChat(activeChatId);
 };
+
 function saveChats(){
 localStorage.setItem("chats",JSON.stringify(chats));
 }
