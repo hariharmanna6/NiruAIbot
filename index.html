@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Universal AI Chat (Safe Mode)</title>
+    <title>Universal AI Chat</title>
     
     <script>
         window.onerror = function(msg, url, line, col, error) {
@@ -132,8 +132,22 @@
                     <input type="password" id="setting-key" class="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Model ID</label>
-                    <input type="text" id="setting-model" class="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Model Selection</label>
+                    <select id="setting-model" class="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
+                        <option value="openrouter/free">openrouter/free</option>
+                        <option value="meta-llama/Llama-2-7b-chat-hf">meta-llama/Llama-2-7b-chat-hf</option>
+                        <option value="mistralai/Mistral-7B-Instruct-v0.2">mistralai/Mistral-7B-Instruct-v0.2</option>
+                        <option value="google/gemma-7b-it">google/gemma-7b-it</option>
+                        <option value="nousresearch/nous-hermes-2-mistral-7b">nousresearch/nous-hermes-2-mistral-7b</option>
+                        <option value="tiiuae/falcon-7b-instruct">tiiuae/falcon-7b-instruct</option>
+                        <option value="huggingfaceh4/starchat-beta">huggingfaceh4/starchat-beta</option>
+                        <option value="openchat/openchat-3.5-0106">openchat/openchat-3.5-0106</option>
+                        <option value="gryphe/mythomax-l2-13b">gryphe/mythomax-l2-13b</option>
+                        <option value="teknium/openhermes-2.5-mistral-7b">teknium/openhermes-2.5-mistral-7b</option>
+                        <option value="cognitivecomputations/dolphin-2.6-mistral-7b">cognitivecomputations/dolphin-2.6-mistral-7b</option>
+                        <option value="allenai/olmo-7b-instruct">allenai/olmo-7b-instruct</option>
+                        <option value="upstage/solar-0-70b-instruct-v1">upstage/solar-0-70b-instruct-v1</option>
+                    </select>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">System Prompt</label>
@@ -149,7 +163,7 @@
 
     <script>
         const API_URL = "https://openrouter.ai/api/v1/chat/completions";
-        const DEFAULT_MODEL = "deepseek/deepseek-r1:free";
+        const DEFAULT_MODEL = "openrouter/free"; 
         const DEFAULT_SYSTEM = "You are a helpful assistant.";
 
         class ChatApp {
@@ -198,20 +212,16 @@
                         this.loadChat(lastChat.id);
                     }
 
-                    // Setup Markdown Safety Check
                     if (typeof marked !== 'undefined') {
                         marked.setOptions({ breaks: true, gfm: true });
-                    } else {
-                        console.warn("Marked.js failed to load. Markdown disabled.");
                     }
 
-                    // Force Hide Loader
                     this.els.loader.style.display = 'none';
                     this.els.app.classList.remove('hidden');
 
                 } catch (e) {
                     console.error("Init Error:", e);
-                    throw e; // Pass to global handler
+                    throw e; 
                 }
             }
 
@@ -228,7 +238,15 @@
                 }
                 
                 if (this.els.settingKey) this.els.settingKey.value = this.state.apiKey || '';
-                if (this.els.settingModel) this.els.settingModel.value = this.state.model || DEFAULT_MODEL;
+                // Dropdown value setting
+                if (this.els.settingModel) {
+                     this.els.settingModel.value = this.state.model;
+                     // If saved model isn't in new list, reset to default
+                     if (!this.els.settingModel.value) {
+                         this.els.settingModel.value = DEFAULT_MODEL;
+                         this.state.model = DEFAULT_MODEL;
+                     }
+                }
                 if (this.els.settingSystem) this.els.settingSystem.value = this.state.systemPrompt || DEFAULT_SYSTEM;
                 if (this.els.headerModel) this.els.headerModel.innerText = this.state.model || DEFAULT_MODEL;
             }
@@ -330,7 +348,6 @@
                 if (typeof marked !== 'undefined') {
                     return marked.parse(content);
                 }
-                // Fallback if marked fails to load
                 return content.replace(/\n/g, '<br>');
             }
 
@@ -507,7 +524,6 @@
                 window.app = new ChatApp();
             } catch (e) {
                 console.error("Critical Boot Error:", e);
-                // Force error display via the window.onerror handler
                 throw e; 
             }
         });
